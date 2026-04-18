@@ -1,13 +1,14 @@
-const express = require('express')
+const express = require("express");
+const paymentController = require('../controllers/payment_controller.js')
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", (res) => {
   res.redirect("/make-payment");
 });
 
-router.get("/make-payment", (req, res) => {
-  res.send("Make Payment");
+router.post("/make-payment", (req, res) => {
+  paymentController.create(req, res);
 });
 
 module.exports = router;

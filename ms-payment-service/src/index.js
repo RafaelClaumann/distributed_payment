@@ -4,6 +4,7 @@ const port = 3000
 
 const routes = require("./routes/routes.js");
 
+app.use(express.json({limit: "1mb"}))
 app.use("/", routes)
 
 app.listen(port, () => {
