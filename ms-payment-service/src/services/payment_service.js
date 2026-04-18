@@ -26,10 +26,12 @@ exports.savePayment = async (req) => {
   let isValid = valitadeService.validateJson(req.body);
   console.log("isValid? ", isValid);
 
-  if (isValid) {
-    console.log("Salvando pagamento: ", transactionToSave);
-    payments.push(transactionToSave);
+  if (!isValid) {
+    throw new Error("Invalid payload");
   }
+
+  console.log("Salvando pagamento: ", transactionToSave);
+  payments.push(transactionToSave);
 
   return payments.at(-1);
 };
