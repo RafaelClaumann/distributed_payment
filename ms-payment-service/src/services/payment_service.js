@@ -1,4 +1,5 @@
 const valitadeService = require("./validation_service.js");
+const transactionStatus = require("../enums/transaction_status.js");
 
 var payments = [
   {
@@ -7,7 +8,7 @@ var payments = [
     amount: 299.9,
     currency: "BRL",
     description: "Compra na CompreFácil",
-    status: "pending",
+    status: transactionStatus.PENDING,
     createdAt: "2026-04-17T14:30:00.000Z",
   },
 ];
@@ -15,17 +16,15 @@ var payments = [
 exports.savePayment = async (req) => {
   let transactionToSave = {
     transactionId: crypto.randomUUID(),
-    userId: req.body.userId,
+    userId: req.body.user_id,
     amount: req.body.amount,
     currency: req.body.currency,
     description: req.body.description,
-    status: "pending",
+    status: transactionStatus.fromString("pending"),
     createdAt: Date.now(),
   };
 
   let isValid = valitadeService.validateJson(req.body);
-  console.log("isValid? ", isValid);
-
   if (!isValid) {
     throw new Error("Invalid payload");
   }
