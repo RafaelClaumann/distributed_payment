@@ -14,6 +14,11 @@ var payments = [
 ];
 
 exports.savePayment = async (req) => {
+  let isValid = valitadeService.validateJson(req.body);
+  if (!isValid) {
+    throw new Error("Invalid payload");
+  }
+
   let transactionToSave = {
     transactionId: crypto.randomUUID(),
     userId: req.body.user_id,
@@ -23,11 +28,6 @@ exports.savePayment = async (req) => {
     status: transactionStatus.fromString("pending"),
     createdAt: Date.now(),
   };
-
-  let isValid = valitadeService.validateJson(req.body);
-  if (!isValid) {
-    throw new Error("Invalid payload");
-  }
 
   console.log("Salvando pagamento: ", transactionToSave);
   payments.push(transactionToSave);
