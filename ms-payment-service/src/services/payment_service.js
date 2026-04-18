@@ -1,3 +1,5 @@
+const valitadeService = require("./validation_service.js");
+
 var payments = [
   {
     transactionId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -11,10 +13,8 @@ var payments = [
 ];
 
 exports.savePayment = async (req) => {
-    console.log("req: ", req.body)
-  const myUuid = crypto.randomUUID();
-  let x = {
-    transactionId: myUuid,
+  let transactionToSave = {
+    transactionId: crypto.randomUUID(),
     userId: req.body.userId,
     amount: req.body.amount,
     currency: req.body.currency,
@@ -23,8 +23,13 @@ exports.savePayment = async (req) => {
     createdAt: Date.now(),
   };
 
-  console.log("Salvando pagamento: ", x);
-  console.log("Payments: ", payments.at(-1));
+  let isValid = valitadeService.validateJson(req.body);
+  console.log("isValid? ", isValid);
+
+  if (isValid) {
+    console.log("Salvando pagamento: ", transactionToSave);
+    payments.push(transactionToSave);
+  }
 
   return payments.at(-1);
 };
