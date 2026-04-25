@@ -43,6 +43,14 @@ async function updateTransactionStatus(id, status) {
   return rows[0] ?? null;
 }
 
+async function incrementAttempts(id) {
+  const { rows } = await query(
+    `UPDATE transactions SET attempts = attempts + 1 WHERE transaction_id = $1 RETURNING *`,
+    [id],
+  );
+  return rows[0] ?? null;
+}
+
 async function deleteTransaction(id) {
   await query(`DELETE FROM transactions WHERE transaction_id = $1`, [id]);
 }
@@ -52,5 +60,6 @@ module.exports = {
   getTransactionById,
   getTransactionsByUser,
   updateTransactionStatus,
+  incrementAttempts,
   deleteTransaction,
 };
