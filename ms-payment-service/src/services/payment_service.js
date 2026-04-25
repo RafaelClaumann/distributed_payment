@@ -1,6 +1,8 @@
 const valitadeService = require("./validation_service.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const transactionService = require("../lib/transaction.js");
+const { scheduleApproval } = require('../jobs/approval_job.js')
+
 
 exports.savePayment = async (req) => {
   let isValid = valitadeService.validateJson(req.body);
@@ -16,6 +18,8 @@ exports.savePayment = async (req) => {
     description: req.body.description,
     status: transactionStatus.fromString("pending"),
   });
+
+  scheduleApproval(transactionToSave);
 
   console.log("Saving transaction: ", transactionToSave);
   return transactionToSave;
