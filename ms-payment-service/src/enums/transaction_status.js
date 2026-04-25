@@ -1,6 +1,7 @@
 const TransactionStatus = Object.freeze({
   PENDING: "pending",
   SUCCESS: "success",
+  ERROR: "error",
   fromString(value) {
     const status = Object.values(this)
       .filter((s) => typeof s === "string")
