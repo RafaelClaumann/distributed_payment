@@ -7,10 +7,7 @@
 
 require("dotenv").config();
 
-const {
-  updateTransactionStatus,
-  incrementAttempts,
-} = require("../lib/transaction.js");
+const { updateTransactionStatus } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const { publish, publishToPaymentDlq } = require("../lib/rabbit.js");
 
@@ -56,7 +53,6 @@ function scheduleApproval(transaction) {
         ),
       );
     } catch (err) {
-      const updated = await incrementAttempts(transaction.transaction_id);
       console.error(
         `[Error] falha ao aprovar ${transaction.transaction_id}:`,
         err.message,
@@ -67,7 +63,7 @@ function scheduleApproval(transaction) {
           transaction,
           "PAYMENT_FAILED",
           "Falha no processamento do pagamento.",
-          { error: err.message, attempts: updated.attempts },
+          { error: err.message },
         ),
       );
     }
