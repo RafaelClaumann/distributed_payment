@@ -1,15 +1,39 @@
 CREATE TABLE IF NOT EXISTS transactions (
     transaction_id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
-    amount NUMERIC(10,2) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    description TEXT,
-    status VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    user_id        UUID           NOT NULL,
+    amount         NUMERIC(10,2)  NOT NULL,
+    currency       VARCHAR(10)    NOT NULL,
+    description    TEXT,
+    status         VARCHAR(20)    NOT NULL,
+    attempts       INT            NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP      NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_transactions_user_id ON transactions(user_id);
-CREATE INDEX idx_transactions_status ON transactions(status);
+CREATE TABLE IF NOT EXISTS dlq_events (
+  id             SERIAL PRIMARY KEY,
+  transaction_id UUID         NOT NULL,
+  attempts       INT          NOT NULL,
+  error          TEXT,
+  created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT fk_dlq_transaction
+    FOREIGN KEY (transaction_id)
+    REFERENCES transactions(transaction_id)
+);
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_transactions_updated_at
+BEFORE UPDATE ON transactions
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 INSERT INTO transactions (
     transaction_id,
