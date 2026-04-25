@@ -5,6 +5,7 @@ exports.create = async (req, res) => {
   try {
     transaction = await paymentService.savePayment(req);
   } catch (error) {
+    console.log(error)
     res.status(400).json({ error: "Invalid payload" });
   }
 

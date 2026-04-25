@@ -1,12 +1,13 @@
+require('dotenv').config()
+
 const express = require('express')
 const app = express()
-const port = 3000
 
 const routes = require("./routes/routes.js");
 
 app.use(express.json({limit: "1mb"}))
 app.use("/", routes)
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
+app.listen(process.env.SERVER_PORT, () => {
+  console.log(`Example app listening on port ${process.env.SERVER_PORT}`)
 })
