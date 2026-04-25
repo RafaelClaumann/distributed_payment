@@ -16,7 +16,6 @@ async function createTransaction(data) {
     ],
   );
 
-  console.log("saving transaction: ", rows[0]);
   return rows[0];
 }
 

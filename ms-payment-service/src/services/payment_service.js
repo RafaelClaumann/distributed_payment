@@ -1,17 +1,6 @@
 const valitadeService = require("./validation_service.js");
 const transactionStatus = require("../enums/transaction_status.js");
-
-var payments = [
-  {
-    transactionId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    userId: "123e4567-e89b-12d3-a456-426614174000",
-    amount: 299.9,
-    currency: "BRL",
-    description: "Compra na CompreFácil",
-    status: transactionStatus.PENDING,
-    createdAt: "2026-04-17T14:30:00.000Z",
-  },
-];
+const transactionService = require("../lib/transaction.js");
 
 exports.savePayment = async (req) => {
   let isValid = valitadeService.validateJson(req.body);
@@ -19,18 +8,15 @@ exports.savePayment = async (req) => {
     throw new Error("Invalid payload");
   }
 
-  let transactionToSave = {
-    transactionId: crypto.randomUUID(),
-    userId: req.body.user_id,
+  const transactionToSave = await transactionService.createTransaction({
+    transaction_id: crypto.randomUUID(),
+    user_id: req.body.user_id,
     amount: req.body.amount,
     currency: req.body.currency,
     description: req.body.description,
     status: transactionStatus.fromString("pending"),
-    createdAt: Date.now(),
-  };
+  });
 
-  console.log("Salvando pagamento: ", transactionToSave);
-  payments.push(transactionToSave);
-
-  return payments.at(-1);
+  console.log("Saving transaction: ", transactionToSave);
+  return transactionToSave;
 };
