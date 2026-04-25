@@ -16,7 +16,7 @@ exports.savePayment = async (req) => {
     amount: req.body.amount,
     currency: req.body.currency,
     description: req.body.description,
-    status: transactionStatus.fromString("pending"),
+    status: transactionStatus.PENDING,
   });
 
   scheduleApproval(transactionToSave);
