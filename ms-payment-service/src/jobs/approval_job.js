@@ -5,8 +5,6 @@
 // publicar na DLQ para reprocessamento.
 // Chamado de forma não bloqueante logo após persistir a transação em PaymentService.
 
-require("dotenv").config();
-
 const { updateTransactionStatus, incrementAttempts } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const { publish, publishToPaymentDlq } = require("../lib/rabbit.js");
