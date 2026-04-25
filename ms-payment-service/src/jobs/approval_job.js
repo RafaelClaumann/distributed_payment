@@ -5,13 +5,12 @@
 // publicar na DLQ para reprocessamento.
 // Chamado de forma não bloqueante logo após persistir a transação em PaymentService.
 
+require('dotenv').config()
 const { updateTransactionStatus } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
 
-const FAILURE_RATE = 0.2 // 20% de chance de falhar
-
 function simulateError() {
-  if (Math.random() < FAILURE_RATE) {
+  if (Math.random() < process.env.TRANSACTION_PROCESSING_FAILURE_RATE) {
     throw new Error('Falha simulada no processamento externo')
   }
 }
