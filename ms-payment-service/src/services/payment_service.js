@@ -19,10 +19,10 @@ exports.savePayment = async (req) => {
     status: transactionStatus.PENDING,
   });
 
-  await publish("payment.request", {
-    ...transactionToSave,
-    event: "PAYMENT_RECEIVED",
-  });
+  await publish(
+    process.env.PAYMENT_REQUEST_QUEUE_NAME,
+    { ...transactionToSave, event: "PAYMENT_RECEIVED", }
+  );
 
   scheduleApproval(transactionToSave);
 

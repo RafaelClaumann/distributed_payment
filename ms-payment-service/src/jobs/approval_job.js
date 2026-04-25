@@ -44,7 +44,7 @@ function scheduleApproval(transaction) {
       );
 
       await publish(
-        "payment.result",
+        process.env.PAYMENT_RESULT_QUEUE_NAME,
         buildPayload(
           transaction,
           "PAYMENT_APPROVED",
