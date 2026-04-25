@@ -7,21 +7,20 @@
 
 require("dotenv").config();
 
-const { updateTransactionStatus } = require("../lib/transaction.js");
+const { updateTransactionStatus, incrementAttempts } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const { publish, publishToPaymentDlq } = require("../lib/rabbit.js");
 
-function simulateError() {
+function simulatePaymentProcessingError() {
   if (Math.random() < process.env.TRANSACTION_PROCESSING_FAILURE_RATE) {
     throw new Error("Falha simulada no processamento externo");
   }
 }
 
-function buildPayload(transaction, event, message, extraFields = {}) {
+function buildMessage(transaction, event, extraFields = {}) {
   return {
     ...transaction,
     event,
-    message,
     processed_at: new Date().toISOString(),
     ...extraFields,
   };
@@ -32,40 +31,22 @@ function scheduleApproval(transaction) {
 
   setTimeout(async () => {
     try {
-      simulateError();
+      simulatePaymentProcessingError();
 
-      await updateTransactionStatus(
-        transaction.transaction_id,
-        transactionStatus.SUCCESS,
-      );
+      await updateTransactionStatus(transaction.transaction_id, transactionStatus.SUCCESS);
+      const message = buildMessage(transaction, "PAYMENT_APPROVED", { status: transactionStatus.SUCCESS })
+      await publish(process.env.PAYMENT_RESULT_QUEUE_NAME, message);
 
-      console.log(
-        `[Approved] ${transaction.transaction_id} após ${(delay / 1000).toFixed(1)}s`,
-      );
-
-      await publish(
-        process.env.PAYMENT_RESULT_QUEUE_NAME,
-        buildPayload(
-          transaction,
-          "PAYMENT_APPROVED",
-          "Seu pagamento foi confirmado!",
-          { status: transactionStatus.SUCCESS },
-        ),
-      );
+      console.log(`[Approved] [${transaction.transaction_id}] após ${(delay / 1000).toFixed(1)}s`);
     } catch (err) {
-      console.error(
-        `[Error] falha ao aprovar ${transaction.transaction_id}:`,
-        err.message,
-      );
 
-      await publishToPaymentDlq(
-        buildPayload(
-          transaction,
-          "PAYMENT_FAILED",
-          "Falha no processamento do pagamento.",
-          { error: err.message },
-        ),
-      );
+      const updatedTransaction = await incrementAttempts(transaction.transaction_id,);
+      if (updatedTransaction.attempts <= process.env.MAX_TRANSACTION_ATTEMPS) {
+        const message = buildMessage(transaction, "PAYMENT_FAILED", { error: err.message, });
+        await publishToPaymentDlq(message);
+      }
+
+      console.error(`[Error] [${transaction.transaction_id}] falha ao aprovar:`, err.message);
     }
   }, delay);
 }

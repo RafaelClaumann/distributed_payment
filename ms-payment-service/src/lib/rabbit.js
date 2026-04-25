@@ -26,7 +26,7 @@ async function publish(queue, payload) {
   ch.sendToQueue(queue, Buffer.from(JSON.stringify(payload)), {
     persistent: true,
   });
-  console.log(`[RabbitMQ] >> Publicado em ${queue}:`, payload.transaction_id);
+  console.log(`[RabbitMQ] [${payload.transaction_id}] Publicado em ${queue}`);
 }
 
 async function publishToPaymentDlq(payload) {
@@ -34,10 +34,7 @@ async function publishToPaymentDlq(payload) {
     ...payload,
     failed_at: new Date().toISOString(),
   });
-  console.warn(
-    `[RabbitMQ] >> Mensagem enviada para DLQ:`,
-    payload.transaction_id,
-  );
+  console.warn(`[RabbitMQ] [${payload.transaction_id}] Mensagem enviada para DLQ`);
 }
 
 module.exports = { publish, publishToPaymentDlq, getChannel };
