@@ -40,4 +40,4 @@ async function publishToPaymentDlq(payload) {
   );
 }
 
-module.exports = { publish, publishToPaymentDlq };
+module.exports = { publish, publishToPaymentDlq, getChannel };
