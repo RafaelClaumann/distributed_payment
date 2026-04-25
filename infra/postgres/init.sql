@@ -10,6 +10,18 @@ CREATE TABLE IF NOT EXISTS transactions (
     updated_at     TIMESTAMP      NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS dlq_events (
+  id             SERIAL PRIMARY KEY,
+  transaction_id UUID         NOT NULL,
+  attempts       INT          NOT NULL,
+  error          TEXT,
+  created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT fk_dlq_transaction
+    FOREIGN KEY (transaction_id)
+    REFERENCES transactions(transaction_id)
+);
+
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
