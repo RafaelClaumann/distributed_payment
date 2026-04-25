@@ -26,6 +26,6 @@ exports.savePayment = async (req) => {
 
   scheduleApproval(transactionToSave);
 
-  console.log("Saving transaction: ", transactionToSave.transaction_id);
+  console.log(`[PaymentService] [${transactionToSave.transaction_id}] saved transaction`);
   return transactionToSave;
 };
