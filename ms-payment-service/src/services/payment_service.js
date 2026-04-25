@@ -1,8 +1,8 @@
 const valitadeService = require("./validation_service.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const transactionService = require("../lib/transaction.js");
-const { scheduleApproval } = require('../jobs/approval_job.js')
-
+const { scheduleApproval } = require("../jobs/approval_job.js");
+const { publish } = require('../lib/rabbit.js')
 
 exports.savePayment = async (req) => {
   let isValid = valitadeService.validateJson(req.body);
@@ -17,6 +17,11 @@ exports.savePayment = async (req) => {
     currency: req.body.currency,
     description: req.body.description,
     status: transactionStatus.PENDING,
+  });
+
+  await publish("payment.request", {
+    ...transactionToSave,
+    event: "PAYMENT_RECEIVED",
   });
 
   scheduleApproval(transactionToSave);

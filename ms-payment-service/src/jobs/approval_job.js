@@ -5,32 +5,62 @@
 // publicar na DLQ para reprocessamento.
 // Chamado de forma não bloqueante logo após persistir a transação em PaymentService.
 
-require('dotenv').config()
+require("dotenv").config();
+
 const { updateTransactionStatus } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
+const { publish } = require('../lib/rabbit.js')
 
 function simulateError() {
   if (Math.random() < process.env.TRANSACTION_PROCESSING_FAILURE_RATE) {
-    throw new Error('Falha simulada no processamento externo')
+    throw new Error("Falha simulada no processamento externo");
   }
 }
 
+function buildPayload(transaction, event, message, extraFields = {}) {
+  return {
+    ...transaction,
+    event,
+    message,
+    processed_at: new Date().toISOString(),
+    ...extraFields,
+  };
+}
+
 function scheduleApproval(transaction) {
-  const delay = Math.random() * 9000 + 1000
+  const delay = Math.random() * 9000 + 1000;
 
   setTimeout(async () => {
     try {
-      simulateError()
+      simulateError();
 
-      await updateTransactionStatus(transaction.transaction_id, transactionStatus.SUCCESS)
+      await updateTransactionStatus(
+        transaction.transaction_id,
+        transactionStatus.SUCCESS,
+      );
 
-      console.log(`[Approved] ${transaction.transaction_id} após ${(delay / 1000).toFixed(1)}s`)
+      console.log(
+        `[Approved] ${transaction.transaction_id} após ${(delay / 1000).toFixed(1)}s`,
+      );
+
+      await publish(
+        "payment.result",
+        buildPayload(
+          transaction,
+          "PAYMENT_APPROVED",
+          "Seu pagamento foi confirmado!",
+          { status: transactionStatus.SUCCESS },
+        ),
+      );
 
     } catch (err) {
-      console.error(`[Error] falha ao aprovar ${transaction.transaction_id}:`, err.message)
+      console.error(
+        `[Error] falha ao aprovar ${transaction.transaction_id}:`,
+        err.message,
+      );
       // futuramente: publicar na DLQ
     }
-  }, delay)
+  }, delay);
 }
 
-module.exports = { scheduleApproval }
+module.exports = { scheduleApproval };
