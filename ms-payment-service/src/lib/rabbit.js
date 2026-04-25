@@ -21,12 +21,10 @@ async function getChannel() {
 async function publish(queue, payload) {
   const channel = await getChannel();
   channel.sendToQueue(queue, Buffer.from(JSON.stringify(payload)), { persistent: true });
-  console.log(`[RabbitMQ] [${payload.transaction_id}] Publicado em ${queue}`);
 }
 
 async function publishToPaymentDlq(payload) {
   await publish(process.env.PAYMENT_DLQ_QUEUE_NAME, { ...payload, failed_at: new Date().toISOString() });
-  console.warn(`[RabbitMQ] [${payload.transaction_id}] Mensagem enviada para DLQ`);
 }
 
 module.exports = { publish, publishToPaymentDlq, getChannel };
