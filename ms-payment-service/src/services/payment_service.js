@@ -2,7 +2,7 @@ const valitadeService = require("./validation_service.js");
 const transactionStatus = require("../enums/transaction_status.js");
 const transactionService = require("../lib/transaction.js");
 const { scheduleApproval } = require("../jobs/approval_job.js");
-const { publish } = require('../lib/rabbit.js')
+const { publish } = require("../lib/rabbit.js");
 
 exports.savePayment = async (req) => {
   let isValid = valitadeService.validateJson(req.body);
@@ -19,13 +19,13 @@ exports.savePayment = async (req) => {
     status: transactionStatus.PENDING,
   });
 
-  await publish(
-    process.env.PAYMENT_REQUEST_QUEUE_NAME,
-    { ...transactionToSave, event: "PAYMENT_RECEIVED", }
-  );
+  await publish(process.env.PAYMENT_REQUEST_QUEUE_NAME, {
+    ...transactionToSave,
+    event: "PAYMENT_RECEIVED",
+  });
 
   scheduleApproval(transactionToSave);
 
-  console.log("Saving transaction: ", transactionToSave);
+  console.log("Saving transaction: ", transactionToSave.transaction_id);
   return transactionToSave;
 };

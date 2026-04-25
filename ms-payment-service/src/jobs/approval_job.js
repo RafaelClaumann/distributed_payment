@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const { updateTransactionStatus } = require("../lib/transaction.js");
 const transactionStatus = require("../enums/transaction_status.js");
-const { publish } = require('../lib/rabbit.js')
+const { publish, publishToPaymentDlq } = require("../lib/rabbit.js");
 
 function simulateError() {
   if (Math.random() < process.env.TRANSACTION_PROCESSING_FAILURE_RATE) {
@@ -52,13 +52,20 @@ function scheduleApproval(transaction) {
           { status: transactionStatus.SUCCESS },
         ),
       );
-
     } catch (err) {
       console.error(
         `[Error] falha ao aprovar ${transaction.transaction_id}:`,
         err.message,
       );
-      // futuramente: publicar na DLQ
+
+      await publishToPaymentDlq(
+        buildPayload(
+          transaction,
+          "PAYMENT_FAILED",
+          "Falha no processamento do pagamento.",
+          { error: err.message },
+        ),
+      );
     }
   }, delay);
 }
